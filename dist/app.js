@@ -1,4 +1,4 @@
-import { chooseNext, validateGallery, verifyImage } from './gallery.js?v=random10000-v2';
+import { chooseNext, validateGallery, verifyImage } from './gallery.js?v=random10000-v3';
 
 const image = document.querySelector('#endoscopy');
 const statePanel = document.querySelector('#image-state');
@@ -31,7 +31,7 @@ async function showNext() {
   caption.textContent = 'Loading a new synthetic view…';
   try {
     if (!gallery) {
-      const response = await fetch('./gallery.json?v=random10000-v2', { cache: 'no-store', credentials: 'same-origin' });
+      const response = await fetch('./gallery.json?v=random10000-v3', { cache: 'no-store', credentials: 'same-origin' });
       if (!response.ok) throw new Error('The image gallery is temporarily unavailable.');
       gallery = validateGallery(await response.json());
     }
@@ -42,9 +42,12 @@ async function showNext() {
       if (!chosen.image) break;
       let pendingUrl;
       try {
-        const response = await fetch(chosen.image.src, { credentials: 'same-origin' });
+        const start = chosen.image.offset, end = start + chosen.image.length - 1;
+        const response = await fetch(chosen.image.src, { credentials: 'same-origin', headers: { Range: `bytes=${start}-${end}` } });
         if (!response.ok) throw new Error('Image unavailable');
-        const bytes = await response.arrayBuffer();
+        const payload = await response.arrayBuffer();
+        const bytes = response.status === 206 ? payload : payload.slice(start, end + 1);
+        if (bytes.byteLength !== chosen.image.length) throw new Error('Incomplete image range');
         await verifyImage(bytes, chosen.image.sha256);
         pendingUrl = URL.createObjectURL(new Blob([bytes], { type: 'image/jpeg' }));
         const decoded = new Image();

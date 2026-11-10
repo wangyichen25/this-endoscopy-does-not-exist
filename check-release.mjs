@@ -19,12 +19,20 @@ function dimensions(b){
  }
  throw Error('JPEG dimensions absent');
 }
-let bytes=0;
-for(const row of gallery.images){
- const b=await readFile('dist/'+row.src),d=dimensions(b);
- if(createHash('sha256').update(b).digest('hex')!==row.sha256||d.width!==512||d.height!==512||d.components!==3)throw Error('Image binding or dimensions differ');
- bytes+=b.length;
+let bytes=0;const seen=new Set();
+if(receipt.schema!==3||receipt.chunks.length!==100)throw Error('Expected 100 chunks');
+for(const chunk of receipt.chunks){
+ const b=await readFile('dist/'+chunk.src);
+ if(createHash('sha256').update(b).digest('hex')!==chunk.sha256||b.length!==chunk.bytes)throw Error('Chunk binding differs');
+ let offset=0;
+ for(const row of gallery.images.filter(r=>r.src===chunk.src)){
+  if(row.offset!==offset)throw Error('Non-contiguous image range');
+  const image=b.subarray(row.offset,row.offset+row.length),d=dimensions(image);
+  if(createHash('sha256').update(image).digest('hex')!==row.sha256||d.width!==512||d.height!==512||d.components!==3)throw Error('Image binding or dimensions differ');
+  offset+=row.length;seen.add(row.id);
+ }
+ if(offset!==b.length)throw Error('Unlisted chunk bytes');bytes+=b.length;
 }
-if(bytes>=940000000||bytes!==receipt.web_bytes)throw Error('Published image size budget exceeded or receipt differs');
-if((await readdir('dist/images')).sort().join(',')!==gallery.images.map(x=>x.id+'.jpg').sort().join(','))throw Error('Unlisted image files');
-console.log(JSON.stringify({status:'passed',synthetic_images:10000,release_id:gallery.release_id,web_bytes:bytes,live_generation:false}));
+if(seen.size!==10000||bytes>=940000000||bytes!==receipt.web_bytes)throw Error('Image count or byte count differs');
+if((await readdir('dist/images')).sort().join(',')!==receipt.chunks.map(x=>x.src.split('/').at(-1)).sort().join(','))throw Error('Unlisted chunks');
+console.log(JSON.stringify({status:'passed',synthetic_images:10000,release_id:gallery.release_id,web_bytes:bytes,chunks:100,all_JPEG_bytes_unchanged:true}));

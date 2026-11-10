@@ -2,14 +2,14 @@ const HEX = /^[a-f0-9]{64}$/;
 const ID = /^[a-f0-9]{16,64}$/;
 
 export function validateGallery(value) {
-  if (!value || value.schema !== 2 || value.status !== 'released' || typeof value.release_id !== 'string' || !ID.test(value.release_id) || !Array.isArray(value.images) || value.images.length !== 10000) {
+  if (!value || value.schema !== 3 || value.status !== 'released' || typeof value.release_id !== 'string' || !ID.test(value.release_id) || !Array.isArray(value.images) || value.images.length !== 10000) {
     throw new Error('The image gallery is being prepared.');
   }
   if (Object.keys(value).sort().join(',') !== 'images,release_id,schema,status') throw new Error('The image gallery could not be verified.');
   const ids = new Set();
   const hashes = new Set();
   for (const item of value.images) {
-    if (!item || Object.keys(item).sort().join(',') !== 'id,sha256,src' || typeof item.id !== 'string' || typeof item.sha256 !== 'string' || !ID.test(item.id) || !HEX.test(item.sha256) || item.src !== `./images/${item.id}.jpg` || ids.has(item.id) || hashes.has(item.sha256)) {
+    if (!item || Object.keys(item).sort().join(',') !== 'id,length,offset,sha256,src' || typeof item.id !== 'string' || typeof item.sha256 !== 'string' || !ID.test(item.id) || !HEX.test(item.sha256) || !/^\.\/images\/chunk-[0-9]{3}\.bin$/.test(item.src) || !Number.isSafeInteger(item.offset) || item.offset < 0 || !Number.isSafeInteger(item.length) || item.length < 1000 || item.length > 1000000 || item.offset + item.length > 16000000 || ids.has(item.id) || hashes.has(item.sha256)) {
       throw new Error('The image gallery could not be verified.');
     }
     ids.add(item.id);

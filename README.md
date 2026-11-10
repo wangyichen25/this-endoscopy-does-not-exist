@@ -9,3 +9,5 @@ The pool uses 10,000 unique uniform uint32 seeds frozen before inference. All fi
 Full-color JPEG delivery copies (quality 93, no chroma subsampling) retain the complete 512×512 field. Original PNGs remain on authorized HPC storage. Generated images are separate release assets and remain out of Git. No training images, real evaluation images, participant identities, internal QA or model weights are published.
 
 StyleGAN2 implementation and upstream license: https://github.com/NVlabs/stylegan2-ada-pytorch . Model code and weights are not redistributed here.
+
+To keep large Pages deployments efficient, the exact JPEG bytes are packaged in 100 static chunks. The browser requests only the selected image byte range and checks its SHA256. If a host ignores Range, the loader slices the selected image from the returned chunk before verifying it. Image selection and pixel data are unchanged by this packaging.
