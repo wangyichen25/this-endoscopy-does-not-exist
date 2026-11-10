@@ -1,0 +1,47 @@
+name: Publish synthetic endoscopy gallery
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Synthetic image release
+        required: true
+        type: string
+      asset_sha256:
+        description: SHA256 of synthetic-images.zip
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Download and verify synthetic image release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          ASSET_SHA256: ${{ inputs.asset_sha256 }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]]
+          [[ "$ASSET_SHA256" =~ ^[a-f0-9]{64}$ ]]
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern synthetic-images.zip --output "$RUNNER_TEMP/synthetic-images.zip"
+          python3 extract-images.py "$RUNNER_TEMP/synthetic-images.zip" "$ASSET_SHA256"
+          node check-release.mjs
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: dist
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

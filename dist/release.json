@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "model": "StyleGAN2",
+  "resolution": 512,
+  "image_count": 50,
+  "checkpoint_sha256": "632979fcd33f4db5fe78e4794f371892f2cadc5e025e3433d30957a5f0ef54c2",
+  "training_presentations": 16329664,
+  "fid50k_full": 4.949907459733869,
+  "source_scope": "private_plus_true_open",
+  "sampling": "50 unfiltered synthetic images from the blinded assessment",
+  "live_generation": false
+}
