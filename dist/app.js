@@ -1,13 +1,11 @@
-import { chooseNext, validateGallery, verifyImage } from './gallery.js';
+import { chooseNext, validateGallery, verifyImage } from './gallery.js?v=random10000-v2';
 
 const image = document.querySelector('#endoscopy');
 const statePanel = document.querySelector('#image-state');
 const message = document.querySelector('#state-message');
 const caption = document.querySelector('#caption');
-const button = document.querySelector('#next-image');
-const label = button.querySelector('span');
 const figure = document.querySelector('figure');
-const storageKey = 'endoscopy-gallery-v1';
+const storageKey = 'endoscopy-gallery-random-v2';
 let gallery;
 let memory;
 let objectUrl;
@@ -29,12 +27,11 @@ function remember(state) {
 async function showNext() {
   if (loading) return;
   loading = true;
-  button.disabled = true;
   figure.setAttribute('aria-busy', 'true');
   caption.textContent = 'Loading a new synthetic view…';
   try {
     if (!gallery) {
-      const response = await fetch('./gallery.json', { cache: 'no-store', credentials: 'same-origin' });
+      const response = await fetch('./gallery.json?v=random10000-v2', { cache: 'no-store', credentials: 'same-origin' });
       if (!response.ok) throw new Error('The image gallery is temporarily unavailable.');
       gallery = validateGallery(await response.json());
     }
@@ -49,7 +46,7 @@ async function showNext() {
         if (!response.ok) throw new Error('Image unavailable');
         const bytes = await response.arrayBuffer();
         await verifyImage(bytes, chosen.image.sha256);
-        pendingUrl = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
+        pendingUrl = URL.createObjectURL(new Blob([bytes], { type: 'image/jpeg' }));
         const decoded = new Image();
         decoded.src = pendingUrl;
         await decoded.decode();
@@ -61,7 +58,6 @@ async function showNext() {
         objectUrl = pendingUrl;
         remember(chosen.state);
         caption.textContent = 'AI-generated · 512 × 512';
-        label.textContent = 'New image';
         return;
       } catch {
         if (pendingUrl) URL.revokeObjectURL(pendingUrl);
@@ -74,14 +70,10 @@ async function showNext() {
     statePanel.hidden = false;
     image.hidden = true;
     caption.textContent = 'AI-generated image';
-    label.textContent = 'Try again';
-    if (!gallery) label.textContent = 'Check again';
   } finally {
     figure.setAttribute('aria-busy', 'false');
     loading = false;
-    button.disabled = false;
   }
 }
 
-button.addEventListener('click', showNext);
 showNext();

@@ -1,12 +1,19 @@
 {
-  "schema": 1,
+  "schema": 2,
   "model": "StyleGAN2",
   "resolution": 512,
-  "image_count": 50,
+  "image_count": 10000,
   "checkpoint_sha256": "632979fcd33f4db5fe78e4794f371892f2cadc5e025e3433d30957a5f0ef54c2",
   "training_presentations": 16329664,
   "fid50k_full": 4.949907459733869,
   "source_scope": "private_plus_true_open",
-  "sampling": "50 unfiltered synthetic images from the blinded assessment",
-  "live_generation": false
+  "sampling": "10,000 random latent seeds frozen before inference; all first outputs retained",
+  "all_first_outputs_retained": true,
+  "filtering": false,
+  "live_generation": false,
+  "format": "JPEG",
+  "jpeg_quality": 93,
+  "chroma_subsampling": 0,
+  "latent_seed_plan_sha256": "a10e0bf390c9b9e2fad42aeca72c972cefe5cbfc53df9dffdbfc6e238261a4a5",
+  "web_bytes": 747692084
 }
